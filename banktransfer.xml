@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="3.1" type="plugin" group="crowdfundingpayment" method="upgrade">
+    <name>PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER</name>
+    <author>Todor Iliev</author>
+    <copyright>Copyright (C) 2010 Todor Iliev ( ITPrism.com ). All rights reserved.</copyright>
+    <license>http://www.gnu.org/copyleft/gpl.html GNU/GPL</license>
+    <authorEmail>todor@itprism.com</authorEmail>
+    <authorUrl>http://itprism.com</authorUrl>
+    <version>1.0</version>
+    <creationDate>31 August, 2013</creationDate>
+    <description>PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DESC</description>
+    
+    <languages  folder="language">
+        <language tag="en-GB">en-GB/en-GB.plg_crowdfundingpayment_banktransfer.ini</language>
+        <language tag="en-GB">en-GB/en-GB.plg_crowdfundingpayment_banktransfer.sys.ini</language>
+    </languages> 
+    
+    <files>
+		<folder>images</folder>
+		<folder>js</folder>
+        <filename plugin="banktransfer">banktransfer.php</filename>
+        <filename>index.html</filename>
+    </files>
+    
+    <help url="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_HELP_URL"/>
+    
+    <config>
+		<fields name="params">
+			<fieldset name="basic">
+			
+    	        <field name="beneficiary" type="editor" 
+                    label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_BENEFICIARY" 
+                    description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_BENEFICIARY_DESC" 
+                    rows="15" 
+                    filter="safehtml"
+                />
+    	        <field name="return_url" type="text"  label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_RETURN_URL" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_RETURN_URL_DESC" class="span6" />
+                
+                <field name="display_additional_info" type="radio" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DISPLAY_ADDITIONAL_INFO" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DISPLAY_ADDITIONAL_INFO_DESC" class="btn-group" default="1">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <field name="additional_info" type="textarea" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ADDITIONAL_INFO" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ADDITIONAL_INFO_DESC" class="span6" rows="5" />
+                
+                <field name="spacer2" type="spacer" hr="true" />
+                <field name="send_admin_mail" type="radio" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_SEND_MAIL_ADMIN" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_SEND_MAIL_ADMIN_DESC" class="btn-group" default="0">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <field name="send_user_mail" type="radio" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_SEND_MAIL_USER" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_SEND_MAIL_USER_DESC" class="btn-group" default="0" >
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                
+			</fieldset>
+	            
+        </fields>
+	</config>
+</extension>
