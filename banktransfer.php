@@ -3,12 +3,8 @@
  * @package      CrowdFunding
  * @subpackage   Plugins
  * @author       Todor Iliev
- * @copyright    Copyright (C) 2010 Todor Iliev <todor@itprism.com>. All rights reserved.
+ * @copyright    Copyright (C) 2013 Todor Iliev <todor@itprism.com>. All rights reserved.
  * @license      http://www.gnu.org/copyleft/gpl.html GNU/GPL
- * CrowdFunding is free software. This version may have been modified pursuant
- * to the GNU General Public License, and as distributed it includes or
- * is derivative of works licensed under the GNU General Public License or
- * other free or open source software licenses.
  */
 
 // no direct access
@@ -21,6 +17,8 @@ jimport('joomla.plugin.plugin');
  *
  * @package      CrowdFunding
  * @subpackage   Plugins
+ * 
+ * @todo Use $this->app and $autoloadLanguage to true, when Joomla! 2.5 is not actual anymore.
  */
 class plgCrowdFundingPaymentBankTransfer extends JPlugin {
     
@@ -60,21 +58,22 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         // This is a URI path to the plugin folder
         $pluginURI = "plugins/crowdfundingpayment/banktransfer";
         
-        // Load the script that initialize the select element with banks.
+        // Load Twitter Bootstrap and its styles, 
+        // because I am going to use them for a modal window.
         JHtml::_("bootstrap.framework");
         JHtml::_("bootstrap.loadCss");
         
-        $doc = JFactory::getDocument();
+        // Load the script that initializes the select element with banks.
         $doc->addScript($pluginURI."/js/plg_crowdfundingpayment_banktransfer.js");
         
-        // Check for valid beneficiary information
+        // Check for valid beneficiary information. If missing information, display error message.
         $beneficiaryInfo = JString::trim($this->params->get("beneficiary"));
         if(!$beneficiaryInfo) {
             return '<div class="alert">'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_PLUGIN_NOT_CONFIGURED").'</div>';
         }
         
         $html  =  "";
-        $html .= '<h4><img src="'.$pluginURI.'/images/bank_icon.png" />'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_TITLE").'</h4>';
+        $html .= '<h4><img src="'.$pluginURI.'/images/bank_icon.png" width="30" height="26" />'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_TITLE").'</h4>';
         $html .= '<div>'.nl2br($this->params->get("beneficiary")).'</div>';
         
         if($this->params->get("display_additional_info", 1)) {
@@ -90,7 +89,7 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
             
         $html .= '<div class="clearfix"></div>';
         $html .= '<a href="#" class="btn btn-primary" id="js-register-bt">'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_MAKE_BANK_TRANSFER").'</a>';
-        $html .= '<a href="#" class="btn hide" id="js-continue-bt">'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_CONTINUE_NEXT_STEP").'</a>';
+        $html .= '<a href="#" class="btn btn-success hide" id="js-continue-bt">'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_CONTINUE_NEXT_STEP").'</a>';
         
         $html .= '    
     <div class="modal hide fade" id="js-banktransfer-modal">
@@ -113,4 +112,53 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
     }
     
     
+    /**
+     * This method is invoked when the administrator changes transaction status from the backend.
+     *
+     * @param string 	This string gives information about that where it has been executed the trigger.
+     * @param object 	A transaction data.
+     * @param string    Old staus
+     * @param string    New staus
+     * 
+     * @return void
+     */
+    public function onTransactionChangeStatus($context, $item, $oldStatus, $newStatus) {
+    
+        $app = JFactory::getApplication();
+        /** @var $app JSite **/
+    
+        if($app->isSite()) {
+            return;
+        }
+    
+        $doc     = JFactory::getDocument();
+        /**  @var $doc JDocumentHtml **/
+    
+        // Check document type
+        $docType = $doc->getType();
+        if(strcmp("html", $docType) != 0){
+            return;
+        }
+         
+        if(strcmp("com_crowdfunding.transaction", $context) != 0){
+            return;
+        }
+    
+        if(strcmp($oldStatus, "completed") == 0) { // Remove funds, if someone change the status from completed to other one.
+            
+            jimport("crowdfunding.project");
+            $project = new CrowdFundingProject($item->project_id);
+            $project->removeFunds($item->txn_amount);
+            $project->store();
+            
+        } else if(strcmp($newStatus, "completed") == 0) { // Add funds, if someone change the status to completed
+            
+            jimport("crowdfunding.project");
+            $project = new CrowdFundingProject($item->project_id);
+            $project->addFunds($item->txn_amount);
+            $project->store();
+            
+        }
+        
+    }
 }

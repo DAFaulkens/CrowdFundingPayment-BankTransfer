@@ -1,12 +1,9 @@
 jQuery(document).ready(function() {
-
 	 
 	jQuery("#js-register-bt").on("click", function(event){
-		
 		event.preventDefault();
 		jQuery('#js-banktransfer-modal').modal("show");
 	});
-	
 	
 	jQuery("#js-btbtn-yes").on("click", function(event){
 		event.preventDefault();
@@ -40,7 +37,9 @@ jQuery(document).ready(function() {
 				jQuery("#js-bt-alert").html(response.text).show();
 				
 				// Displa the button that points to next step
-				jQuery("#js-continue-bt").attr("href", response.data.return_url).show();
+				if(response.success) {
+					jQuery("#js-continue-bt").attr("href", response.data.return_url).show();
+				}
 				
 				// Hide modal window
 				jQuery('#js-banktransfer-modal').modal('hide')
