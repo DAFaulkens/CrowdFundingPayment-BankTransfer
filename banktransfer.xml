@@ -6,8 +6,8 @@
     <license>http://www.gnu.org/copyleft/gpl.html GNU/GPL</license>
     <authorEmail>todor@itprism.com</authorEmail>
     <authorUrl>http://itprism.com</authorUrl>
-    <version>1.1</version>
-    <creationDate>15 September, 2013</creationDate>
+    <version>1.2</version>
+    <creationDate>22 September, 2013</creationDate>
     <description>PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DESC</description>
     
     <languages  folder="language">
@@ -28,19 +28,19 @@
 		<fields name="params">
 			<fieldset name="basic">
 			
-    	        <field name="beneficiary" type="editor" 
+    	        <field name="beneficiary" type="editor" buttons="false"
                     label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_BENEFICIARY" 
                     description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_BENEFICIARY_DESC" 
                     rows="15" 
                     filter="safehtml"
                 />
-    	        <field name="return_url" type="text"  label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_RETURN_URL" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_RETURN_URL_DESC" class="span6" />
+    	        <field name="return_url" type="text" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_RETURN_URL" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_RETURN_URL_DESC" class="span6" size="100" />
                 
                 <field name="display_additional_info" type="radio" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DISPLAY_ADDITIONAL_INFO" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DISPLAY_ADDITIONAL_INFO_DESC" class="btn-group" default="1">
                     <option value="0">JNO</option>
                     <option value="1">JYES</option>
                 </field>
-                <field name="additional_info" type="textarea" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ADDITIONAL_INFO" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ADDITIONAL_INFO_DESC" class="span6" rows="5" />
+                <field name="additional_info" type="textarea" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ADDITIONAL_INFO" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ADDITIONAL_INFO_DESC" class="span6" rows="5" cols="60" />
                 
                 <field name="spacer2" type="spacer" hr="true" />
                 <field name="send_admin_mail" type="radio" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_SEND_MAIL_ADMIN" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_SEND_MAIL_ADMIN_DESC" class="btn-group" default="0">
