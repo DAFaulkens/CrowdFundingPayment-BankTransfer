@@ -60,8 +60,18 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         
         // Load Twitter Bootstrap and its styles, 
         // because I am going to use them for a modal window.
-        JHtml::_("bootstrap.framework");
-        JHtml::_("bootstrap.loadCss");
+        if(version_compare(JVERSION, "3", ">=")) {
+            JHtml::_("bootstrap.framework");
+            JHtml::_("bootstrap.loadCss");
+        } else {
+            
+            JHtml::addIncludePath(JPATH_COMPONENT.'/helpers/html');
+            JHtml::_("crowdfunding.bootstrap");
+            
+            $doc->addStyleSheet($pluginURI."/css/bootstrap-modal.min.css");
+            $doc->addScript($pluginURI."/js/bootstrap-modal.min.js");
+            
+        }
         
         // Load the script that initializes the select element with banks.
         $doc->addScript($pluginURI."/js/plg_crowdfundingpayment_banktransfer.js");

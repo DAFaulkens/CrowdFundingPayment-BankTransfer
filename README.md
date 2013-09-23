@@ -11,6 +11,7 @@ Changelog
 ###v1.2
 
 * Edited the size of some fields.
+* Fixed bootstrap modal.
 
 ###v1.1
 
