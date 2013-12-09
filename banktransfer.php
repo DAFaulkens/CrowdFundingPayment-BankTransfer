@@ -544,7 +544,7 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         
                 // Log error
                 $this->log->add(
-                    JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_MAIL_SENDING_ADMIN"),
+                    JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_MAIL_SENDING_PROJECT_OWNER"),
                     "BANKTRANSFER_PAYMENT_PLUGIN_ERROR"
                 );
         
@@ -596,7 +596,7 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         
                 // Log error
                 $this->log->add(
-                    JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_MAIL_SENDING_ADMIN"),
+                    JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_MAIL_SENDING_USER"),
                     "BANKTRANSFER_PAYMENT_PLUGIN_ERROR"
                 );
         
