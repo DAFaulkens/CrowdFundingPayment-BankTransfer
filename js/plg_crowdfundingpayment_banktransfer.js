@@ -7,14 +7,15 @@ jQuery(document).ready(function() {
 	
 	jQuery("#js-btbtn-yes").on("click", function(event){
 		event.preventDefault();
-			
+		
 		var data = {
-			project_id: jQuery(this).data("project-id"),
-			amount: jQuery(this).data("amount")
+			project_id: 	 jQuery(this).data("project-id"),
+			amount: 		 jQuery(this).data("amount"),
+			payment_service: "banktransfer"
 		};
 		
 		jQuery.ajax({
-			url: "index.php?option=com_crowdfunding&task=payments.banktransfer&format=raw",
+			url: "index.php?option=com_crowdfunding&task=payments.preparePaymentAjax&format=raw",
 			type: "POST",
 			data: data,
 			dataType: "text json",
@@ -23,6 +24,8 @@ jQuery(document).ready(function() {
 				
 				// Display ajax loading image
 				jQuery("#js-banktransfer-ajax-loading").show();
+				jQuery("#js-btbtn-yes").prop("disabled", true);
+				jQuery("#js-btbtn-no").prop("disabled", true);
 				
 			},
 			success: function(response) {
