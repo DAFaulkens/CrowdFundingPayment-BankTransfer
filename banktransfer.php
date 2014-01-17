@@ -3,14 +3,14 @@
  * @package      CrowdFunding
  * @subpackage   Plugins
  * @author       Todor Iliev
- * @copyright    Copyright (C) 2013 Todor Iliev <todor@itprism.com>. All rights reserved.
+ * @copyright    Copyright (C) 2014 Todor Iliev <todor@itprism.com>. All rights reserved.
  * @license      http://www.gnu.org/copyleft/gpl.html GNU/GPL
  */
 
 // no direct access
 defined('_JEXEC') or die;
 
-jimport('joomla.plugin.plugin');
+jimport('crowdfunding.payment.plugin');
 
 /**
  * CrowdFunding Bank Transfer Payment Plugin
@@ -20,26 +20,13 @@ jimport('joomla.plugin.plugin');
  * 
  * @todo Use $this->app and $autoloadLanguage to true, when Joomla! 2.5 is not actual anymore.
  */
-class plgCrowdFundingPaymentBankTransfer extends JPlugin {
+class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin {
     
-    protected   $log;
-    protected   $logFile = "plg_crowdfunding_banktransfer.php";
-    protected   $version = "1.7";
+    protected $paymentService = "banktransfer";
+    protected $version        = "1.7";
     
-    public function __construct(&$subject, $config = array()) {
-        
-        parent::__construct($subject, $config);
-        
-        // Create log object
-        $file = JPath::clean(JFactory::getApplication()->getCfg("log_path") .DIRECTORY_SEPARATOR. $this->logFile);
-        
-        $this->log = new CrowdFundingLog();
-        $this->log->addWriter(new CrowdFundingLogWriterDatabase(JFactory::getDbo()));
-        $this->log->addWriter(new CrowdFundingLogWriterFile($file));
-        
-        // Load language
-        $this->loadLanguage();
-    }
+    protected $textPrefix     = "PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER";
+    protected $debugType      = "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG";
     
     /**
      * This method prepares a payment gateway - buttons, forms,...
@@ -50,6 +37,10 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
      * @param JRegistry $params	    The parameters of the component
      */
     public function onProjectPayment($context, $item, $params) {
+        
+        if(strcmp("com_crowdfunding.payment", $context) != 0){
+            return;
+        }
         
         $app = JFactory::getApplication();
         /** @var $app JSite **/
@@ -67,10 +58,6 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
             return;
         }
        
-        if(strcmp("com_crowdfunding.payment", $context) != 0){
-            return;
-        }
-        
         // This is a URI path to the plugin folder
         $pluginURI = "plugins/crowdfundingpayment/banktransfer";
         
@@ -95,16 +82,16 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         }
         
         // Load the script that initializes the select element with banks.
-        $doc->addScript($pluginURI."/js/plg_crowdfundingpayment_banktransfer.js?v=".urlencode($this->version));
+        $doc->addScript($pluginURI."/js/plg_crowdfundingpayment_banktransfer.js?v=".rawurlencode($this->version));
         
         $html   =  array();
-        $html[] = '<h4><img src="'.$pluginURI.'/images/bank_icon.png" width="30" height="26" />'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_TITLE").'</h4>';
+        $html[] = '<h4><img src="'.$pluginURI.'/images/bank_icon.png" width="30" height="26" />'.JText::_($this->textPrefix."_TITLE").'</h4>';
         $html[] = '<div>'.nl2br($this->params->get("beneficiary")).'</div>';
         
         // Check for valid beneficiary information. If missing information, display error message.
         $beneficiaryInfo = JString::trim( strip_tags($this->params->get("beneficiary")) );
         if(!$beneficiaryInfo) {
-            $html[] = '<div class="alert">'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_PLUGIN_NOT_CONFIGURED").'</div>';
+            $html[] = '<div class="alert">'.JText::_($this->textPrefix."_ERROR_PLUGIN_NOT_CONFIGURED").'</div>';
             return implode("\n", $html);
         }
         
@@ -113,24 +100,24 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
             if(!empty($additionalInfo)) {
                 $html[] = '<p class="sticky">'.htmlspecialchars($additionalInfo, ENT_QUOTES, "UTF-8").'</p>';
             } else {
-                $html[] = '<p class="sticky">'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_INFO").'</p>';
+                $html[] = '<p class="sticky">'.JText::_($this->textPrefix."_INFO").'</p>';
             }
         }
         
         $html[] = '<div class="alert hide" id="js-bt-alert"></div>';
             
         $html[] = '<div class="clearfix"></div>';
-        $html[] = '<a href="#" class="btn btn-primary" id="js-register-bt">'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_MAKE_BANK_TRANSFER").'</a>';
-        $html[] = '<a href="#" class="btn btn-success hide" id="js-continue-bt">'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_CONTINUE_NEXT_STEP").'</a>';
+        $html[] = '<a href="#" class="btn btn-primary" id="js-register-bt">'.JText::_($this->textPrefix."_MAKE_BANK_TRANSFER").'</a>';
+        $html[] = '<a href="#" class="btn btn-success hide" id="js-continue-bt">'.JText::_($this->textPrefix."_CONTINUE_NEXT_STEP").'</a>';
         
         $html[] = '    
     <div class="modal hide fade" id="js-banktransfer-modal">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h3>'.JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_TITLE").'</h3>
+            <h3>'.JText::_($this->textPrefix."_TITLE").'</h3>
         </div>
         <div class="modal-body">
-            <p>'.JText::_("PLG_CROWDFUNDINGPAYMENT_REGISTER_TRANSACTION_QUESTION").'</p>
+            <p>'.JText::_($this->textPrefix."_REGISTER_TRANSACTION_QUESTION").'</p>
         </div>
         <div class="modal-footer">
             <img src="media/com_crowdfunding/images/ajax-loader.gif" width="16" height="16" id="js-banktransfer-ajax-loading" style="display: none;" />
@@ -143,77 +130,11 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         
     }
     
-    
-    /**
-     * This method is invoked when the administrator changes transaction status from the backend.
-     *
-     * @param string 	This string gives information about that where it has been executed the trigger.
-     * @param object 	A transaction data.
-     * @param string    Old staus
-     * @param string    New staus
-     * 
-     * @return void
-     */
-    public function onTransactionChangeStatus($context, $item, $oldStatus, $newStatus) {
-    
-        $app = JFactory::getApplication();
-        /** @var $app JSite **/
-    
-        if($app->isSite()) {
-            return;
-        }
-    
-        $doc     = JFactory::getDocument();
-        /**  @var $doc JDocumentHtml **/
-    
-        // Check document type
-        $docType = $doc->getType();
-        if(strcmp("html", $docType) != 0){
-            return;
-        }
-         
-        if(strcmp("com_crowdfunding.transaction", $context) != 0){
-            return;
-        }
-    
-        // Verify the service provider.
-        $paymentGateway = str_replace(" ", "", JString::strtolower(JString::trim($item->service_provider)));
-        if(strcmp("banktransfer", $paymentGateway) != 0) {
-            return;
-        }
+    public function onPaymentsPreparePayment($context, $params) {
         
-        if(strcmp($oldStatus, "completed") == 0) { // Remove funds, if someone change the status from completed to other one.
-            
-            jimport("crowdfunding.project");
-            $project = new CrowdFundingProject($item->project_id);
-            
-            // DEBUG DATA
-            JDEBUG ? $this->log->add(JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DEBUG_BCSNC"), "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG", $project->getProperties()) : null;
-            
-            $project->removeFunds($item->txn_amount);
-            $project->store();
-            
-            // DEBUG DATA
-            JDEBUG ? $this->log->add(JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DEBUG_ACSNC"), "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG", $project->getProperties()) : null;
-            
-        } else if(strcmp($newStatus, "completed") == 0) { // Add funds, if someone change the status to completed
-            
-            jimport("crowdfunding.project");
-            $project = new CrowdFundingProject($item->project_id);
-            
-            // DEBUG DATA
-            JDEBUG ? $this->log->add(JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DEBUG_BCSTC"), "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG", $project->getProperties()) : null;
-            
-            $project->addFunds($item->txn_amount);
-            $project->store();
-            
-            // DEBUG DATA
-            JDEBUG ? $this->log->add(JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DEBUG_ACSTC"), "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG", $project->getProperties()) : null;
+        if(strcmp("com_crowdfunding.payments.preparepayment.banktransfer", $context) != 0){
+            return;
         }
-        
-    }
-    
-    public function onContentPreparePayment($context, $params) {
         
         $app = JFactory::getApplication();
         /** @var $app JSite **/
@@ -231,11 +152,7 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
             return;
         }
          
-        if(strcmp("com_crowdfunding.preparepayment.banktransfer", $context) != 0){
-            return;
-        }
-        
-        $projectId    = $app->input->getInt("project_id");
+        $projectId    = $app->input->getInt("pid");
         $amount       = $app->input->getFloat("amount");
         
         $uri          = JUri::getInstance();
@@ -245,15 +162,15 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         $project    = new CrowdFundingProject($projectId);
         
         // DEBUG DATA
-        JDEBUG ? $this->log->add(JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DEBUG_PROJECT_OBJECT"), "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG", $project->getProperties()) : null;
+        JDEBUG ? $this->log->add(JText::_($this->textPrefix."_DEBUG_PROJECT_OBJECT"), $this->debugType, $project->getProperties()) : null;
         
         // Check for valid project
         if(!$project->getId()) {
         
             // Log data in the database
             $this->log->add(
-                JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_INVALID_PROJECT"),
-                "BANKTRANSFER_PAYMENT_PLUGIN_ERROR",
+                JText::_($this->textPrefix."_ERROR_INVALID_PROJECT"),
+                $this->debugType,
                 array(
                     "PROJECT OBJECT" => $project->getProperties(),
                     "REQUEST METHOD" => $app->input->getMethod(),
@@ -264,8 +181,8 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
             // Send response to the browser
             $response = array(
                 "success" => false,
-                "title"   => JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_FAIL"),
-                "text"    => JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_INVALID_PROJECT")
+                "title"   => JText::_($this->textPrefix."_FAIL"),
+                "text"    => JText::_($this->textPrefix."_ERROR_INVALID_PROJECT")
             );
         
             return $response;
@@ -273,7 +190,7 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         
         jimport("crowdfunding.currency");
         $currencyId = $params->get("project_currency");
-        $currency   = CrowdFundingCurrency::getInstance($currencyId);
+        $currency   = CrowdFundingCurrency::getInstance(JFactory::getDbo(), $currencyId);
         
         // Prepare return URL
         $returnUrl = JString::trim($this->params->get('return_url'));
@@ -282,7 +199,7 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         }
         
         // DEBUG DATA
-        JDEBUG ? $this->log->add(JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DEBUG_RETURN_URL"), "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG", $returnUrl) : null;
+        JDEBUG ? $this->log->add(JText::_($this->textPrefix."_DEBUG_RETURN_URL"), $this->debugType, $returnUrl) : null;
         
         // Intentions
         
@@ -295,26 +212,30 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
             $app->setUserState("auser_id", "");
         }
         
-        $intention    = CrowdFundingHelper::getIntention($userId, $aUserId, $projectId);
+        $intention    = $this->getIntention(array(
+            "user_id"       => $userId,
+            "auser_id"      => $aUserId,
+            "project_id"    => $projectId
+        ));
         
         // DEBUG DATA
-        JDEBUG ? $this->log->add(JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DEBUG_INTENTION_OBJECT"), "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG", $intention->getProperties()) : null;
+        JDEBUG ? $this->log->add(JText::_($this->textPrefix."_DEBUG_INTENTION_OBJECT"), $this->debugType, $intention->getProperties()) : null;
         
         // Validate intention record
         if(!$intention->getId()) {
         
             // Log data in the database
             $this->log->add(
-                JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_INVALID_INTENTION"),
-                "BANKTRANSFER_PAYMENT_PLUGIN_ERROR",
+                JText::_($this->textPrefix."_ERROR_INVALID_INTENTION"),
+                $this->debugType,
                 $intention->getProperties()
             );
         
             // Send response to the browser
             $response = array(
                 "success" => false,
-                "title"   => JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_FAIL"),
-                "text"    => JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_INVALID_PROJECT")
+                "title"   => JText::_($this->textPrefix."_FAIL"),
+                "text"    => JText::_($this->textPrefix."_ERROR_INVALID_PROJECT")
             );
             
             return $response;
@@ -331,7 +252,10 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         
         // Prepare transaction data
         jimport("itprism.string");
-        $transactinoId   = JString::strtoupper(ITPrismString::generateRandomString(12, "BT"));
+        $transactionId   = new ITPrismString();
+        $transactionId->generateRandomString(12, "BT");
+        
+        $transactinoId   = JString::strtoupper($transactionId);
         $transactionData = array(
             "txn_amount"   => $amount,
             "txn_currency" => $currency->getAbbr(),
@@ -343,6 +267,9 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
             "receiver_id"  => (int)$project->getUserId(),
             "service_provider"  => "Bank Transfer"
         );
+
+        // DEBUG DATA
+        JDEBUG ? $this->log->add(JText::_($this->textPrefix."_DEBUG_TRANSACTION_DATA"), $this->debugType, $transactionData) : null;
         
         // Auto complete transaction
         if($this->params->get("auto_complete", 0)) {
@@ -351,8 +278,9 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
             $project->store();
         }
         
-        // DEBUG DATA
-        JDEBUG ? $this->log->add(JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DEBUG_TRANSACTION_DATA"), "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG", $transactionData) : null;
+        // Get properties of the project object.
+        $project = $project->getProperties();
+        $project = JArrayHelper::toObject($project);
         
         // Store transaction data
         jimport("crowdfunding.transaction");
@@ -361,7 +289,7 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         
         $transaction->store();
         
-        // Get properties and prepare the object.
+        // Get properties of the transaction object.
         $transaction = $transaction->getProperties();
         $transaction = JArrayHelper::toObject($transaction);
         
@@ -374,8 +302,8 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         // Return response
         $response = array(
             "success" => true,
-            "title"   => JText::_('PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_SUCCESS'),
-            "text"    => JText::sprintf('PLG_CROWDFUNDINGPAYMENT_PAYMENT_BANKTRANSFER_TRANSACTION_REGISTERED', $transaction->txn_id, $transaction->txn_id),
+            "title"   => JText::_($this->textPrefix."_SUCCESS"),
+            "text"    => JText::sprintf($this->textPrefix."_TRANSACTION_REGISTERED", $transaction->txn_id, $transaction->txn_id),
             "data"    => array(
                 "return_url" => $returnUrl
             )
@@ -424,186 +352,6 @@ class plgCrowdFundingPaymentBankTransfer extends JPlugin {
         }
     
         return $rewardId;
-    }
-    
-    protected function sendMails($project, $transaction) {
-        
-        $app = JFactory::getApplication();
-        /** @var $app JSite **/
-        
-        // Get website
-        $uri     = JUri::getInstance();
-        $website = $uri->toString(array("scheme", "host"));
-        
-        jimport("crowdfunding.email");
-        
-        $emailMode  = $this->params->get("email_mode", "plain");
-        
-        // Prepare data for parsing
-        $data = array(
-            "site_name"         => $app->getCfg("sitename"),
-            "site_url"          => JUri::root(),
-            "item_title"        => $project->getTitle(),
-            "item_url"          => $website.JRoute::_(CrowdFundingHelperRoute::getDetailsRoute($project->getSlug(), $project->getCatSlug())),
-            "amount"            => ITPrismString::getAmount($transaction->txn_amount, $transaction->txn_currency),
-            "transaction_id"    => $transaction->txn_id
-        );
-        
-        // Send mail to the administrator
-        $emailId = $this->params->get("admin_mail_id", 0);
-        if(!empty($emailId)) {
-            
-            $table    = new CrowdFundingTableEmail(JFactory::getDbo());
-            $email    = new CrowdFundingEmail();
-            $email->setTable($table);
-            $email->load($emailId);
-            
-            if(!$email->getSenderName()) {
-                $email->setSenderName($app->getCfg("fromname"));
-            }
-            if(!$email->getSenderEmail()) {
-                $email->setSenderEmail($app->getCfg("mailfrom"));
-            }
-            
-            $recipientName = $email->getSenderName();
-            $recipientMail = $email->getSenderEmail();
-            
-            // Prepare data for parsing
-            $data["sender_name"]     =  $email->getSenderName();
-            $data["sender_email"]    =  $email->getSenderEmail();
-            $data["recipient_name"]  =  $recipientName;
-            $data["recipient_email"] =  $recipientMail;
-            
-            $email->parse($data);
-            $subject    = $email->getSubject();
-            $body       = $email->getBody($emailMode);
-            
-            $mailer  = JFactory::getMailer();
-            if(strcmp("html", $emailMode) == 0) { // Send as HTML message
-                $return  = $mailer->sendMail($email->getSenderEmail(), $email->getSenderName(), $recipientMail, $subject, $body, CrowdFundingEmail::MAIL_MODE_HTML);
-            
-            } else { // Send as plain text.
-                $return  = $mailer->sendMail($email->getSenderEmail(), $email->getSenderName(), $recipientMail, $subject, $body, CrowdFundingEmail::MAIL_MODE_PLAIN);
-            
-            }
-            
-            // Check for an error.
-            if ($return !== true) {
-        
-                // Log error
-                $this->log->add(
-                    JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_MAIL_SENDING_ADMIN"),
-                    "BANKTRANSFER_PAYMENT_PLUGIN_ERROR"
-                );
-        
-            }
-        
-        }
-        
-        // Send mail to project owner
-        $emailId = $this->params->get("creator_mail_id", 0);
-        if(!empty($emailId)) {
-        
-            $table    = new CrowdFundingTableEmail(JFactory::getDbo());
-            $email    = new CrowdFundingEmail();
-            $email->setTable($table);
-            $email->load($emailId);
-            
-            if(!$email->getSenderName()) {
-                $email->setSenderName($app->getCfg("fromname"));
-            }
-            if(!$email->getSenderEmail()) {
-                $email->setSenderEmail($app->getCfg("mailfrom"));
-            }
-
-            $user          = JFactory::getUser($transaction->receiver_id);
-            $recipientName = $user->get("name");
-            $recipientMail = $user->get("email");
-            
-            // Prepare data for parsing
-            $data["sender_name"]     =  $email->getSenderName();
-            $data["sender_email"]    =  $email->getSenderEmail();
-            $data["recipient_name"]  =  $recipientName;
-            $data["recipient_email"] =  $recipientMail;
-            
-            $email->parse($data);
-            $subject    = $email->getSubject();
-            $body       = $email->getBody($emailMode);
-            
-            $mailer  = JFactory::getMailer();
-            if(strcmp("html", $emailMode) == 0) { // Send as HTML message
-                $return  = $mailer->sendMail($email->getSenderEmail(), $email->getSenderName(), $recipientMail, $subject, $body, CrowdFundingEmail::MAIL_MODE_HTML);
-            
-            } else { // Send as plain text.
-                $return  = $mailer->sendMail($email->getSenderEmail(), $email->getSenderName(), $recipientMail, $subject, $body, CrowdFundingEmail::MAIL_MODE_PLAIN);
-            
-            }
-            
-            // Check for an error.
-            if ($return !== true) {
-        
-                // Log error
-                $this->log->add(
-                    JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_MAIL_SENDING_PROJECT_OWNER"),
-                    "BANKTRANSFER_PAYMENT_PLUGIN_ERROR"
-                );
-        
-            }
-        }
-        
-        // Send mail to backer
-        $emailId    = $this->params->get("user_mail_id", 0);
-        $investorId = $transaction->investor_id;
-        if(!empty($emailId) AND !empty($investorId)) {
-        
-            $table    = new CrowdFundingTableEmail(JFactory::getDbo());
-            $email    = new CrowdFundingEmail();
-            $email->setTable($table);
-            $email->load($emailId);
-            
-            if(!$email->getSenderName()) {
-                $email->setSenderName($app->getCfg("fromname"));
-            }
-            if(!$email->getSenderEmail()) {
-                $email->setSenderEmail($app->getCfg("mailfrom"));
-            }
-
-            $user          = JFactory::getUser($investorId);
-            $recipientName = $user->get("name");
-            $recipientMail = $user->get("email");
-            
-            // Prepare data for parsing
-            $data["sender_name"]     =  $email->getSenderName();
-            $data["sender_email"]    =  $email->getSenderEmail();
-            $data["recipient_name"]  =  $recipientName;
-            $data["recipient_email"] =  $recipientMail;
-            
-            $email->parse($data);
-            $subject    = $email->getSubject();
-            $body       = $email->getBody($emailMode);
-            
-            $mailer  = JFactory::getMailer();
-            if(strcmp("html", $emailMode) == 0) { // Send as HTML message
-                $return  = $mailer->sendMail($email->getSenderEmail(), $email->getSenderName(), $recipientMail, $subject, $body, CrowdFundingEmail::MAIL_MODE_HTML);
-            
-            } else { // Send as plain text.
-                $return  = $mailer->sendMail($email->getSenderEmail(), $email->getSenderName(), $recipientMail, $subject, $body, CrowdFundingEmail::MAIL_MODE_PLAIN);
-            
-            }
-            
-            // Check for an error.
-            if ($return !== true) {
-        
-                // Log error
-                $this->log->add(
-                    JText::_("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ERROR_MAIL_SENDING_USER"),
-                    "BANKTRANSFER_PAYMENT_PLUGIN_ERROR"
-                );
-        
-            }
-        
-        }
-        
     }
     
 }

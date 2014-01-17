@@ -9,7 +9,7 @@ jQuery(document).ready(function() {
 		event.preventDefault();
 		
 		var data = {
-			project_id: 	 jQuery(this).data("project-id"),
+			pid: 	 		 jQuery(this).data("project-id"),
 			amount: 		 jQuery(this).data("amount"),
 			payment_service: "banktransfer"
 		};
@@ -42,6 +42,10 @@ jQuery(document).ready(function() {
 				// Displa the button that points to next step
 				if(response.success) {
 					jQuery("#js-continue-bt").attr("href", response.data.return_url).show();
+				} else {
+					if(response.redirect_url) {
+						setTimeout("location.href = '"+ response.redirect_url +"'", 1500);
+					}
 				}
 				
 				// Hide modal window
