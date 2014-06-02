@@ -15,7 +15,7 @@ jQuery(document).ready(function() {
 		};
 		
 		jQuery.ajax({
-			url: "index.php?option=com_crowdfunding&task=payments.preparePaymentAjax&format=raw",
+			url: "index.php?option=com_crowdfunding&task=notifier.notifyAjax&format=raw",
 			type: "POST",
 			data: data,
 			dataType: "text json",
@@ -41,7 +41,7 @@ jQuery(document).ready(function() {
 				
 				// Displa the button that points to next step
 				if(response.success) {
-					jQuery("#js-continue-bt").attr("href", response.data.return_url).show();
+					jQuery("#js-continue-bt").attr("href", response.redirect_url).show();
 				} else {
 					if(response.redirect_url) {
 						setTimeout("location.href = '"+ response.redirect_url +"'", 1500);

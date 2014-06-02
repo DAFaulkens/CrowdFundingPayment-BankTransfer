@@ -17,159 +17,180 @@ jimport('crowdfunding.payment.plugin');
  *
  * @package      CrowdFunding
  * @subpackage   Plugins
- * 
- * @todo Use $this->app and $autoloadLanguage to true, when Joomla! 2.5 is not actual anymore.
+ *
+ * @todo         Use $this->app and $autoloadLanguage to true, when Joomla! 2.5 is not actual anymore.
  */
-class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin {
-    
+class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
+{
     protected $paymentService = "banktransfer";
-    protected $version        = "1.7";
-    
-    protected $textPrefix     = "PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER";
-    protected $debugType      = "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG";
-    
+    protected $version = "1.7";
+
+    protected $textPrefix = "PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER";
+    protected $debugType = "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG";
+
     /**
      * This method prepares a payment gateway - buttons, forms,...
      * That gateway will be displayed on the summary page as a payment option.
      *
-     * @param string 	$context	This string gives information about that where it has been executed the trigger.
-     * @param object 	$item	    A project data.
-     * @param JRegistry $params	    The parameters of the component
+     * @param string    $context This string gives information about that where it has been executed the trigger.
+     * @param object    $item    A project data.
+     * @param Joomla\Registry\Registry $params  The parameters of the component
+     *
+     * @return null|string
      */
-    public function onProjectPayment($context, $item, $params) {
-        
-        if(strcmp("com_crowdfunding.payment", $context) != 0){
-            return;
+    public function onProjectPayment($context, &$item, &$params)
+    {
+        if (strcmp("com_crowdfunding.payment", $context) != 0) {
+            return null;
         }
-        
+
         $app = JFactory::getApplication();
-        /** @var $app JSite **/
+        /** @var $app JApplicationSite */
 
-        if($app->isAdmin()) {
-            return;
+        if ($app->isAdmin()) {
+            return null;
         }
 
-        $doc     = JFactory::getDocument();
-        /**  @var $doc JDocumentHtml **/
-        
+        $doc = JFactory::getDocument();
+        /**  @var $doc JDocumentHtml * */
+
         // Check document type
         $docType = $doc->getType();
-        if(strcmp("html", $docType) != 0){
-            return;
+        if (strcmp("html", $docType) != 0) {
+            return null;
         }
-       
+
         // This is a URI path to the plugin folder
         $pluginURI = "plugins/crowdfundingpayment/banktransfer";
-        
-        // Load Twitter Bootstrap and its styles, 
+
+        // Load Twitter Bootstrap and its styles,
         // because I am going to use them for a modal window.
-        if(version_compare(JVERSION, "3", ">=")) {
-            
+        if (version_compare(JVERSION, "3", ">=")) {
+
             JHtml::_("jquery.framework");
-            if($params->get("bootstrap_modal", false)) {
-                JHtml::addIncludePath(ITPRISM_PATH_LIBRARY.'/ui/helpers');
+            if ($params->get("bootstrap_modal", false)) {
+                JHtml::addIncludePath(ITPRISM_PATH_LIBRARY . '/ui/helpers');
                 JHtml::_("bootstrap.framework");
                 JHtml::_("itprism.ui.bootstrap_modal");
             }
-            
+
         } else {
-            if($params->get("bootstrap_modal", false)) {
-                JHtml::addIncludePath(ITPRISM_PATH_LIBRARY.'/ui/helpers');
-                JHtml::addIncludePath(JPATH_COMPONENT.'/helpers/html');
+            if ($params->get("bootstrap_modal", false)) {
+                JHtml::addIncludePath(ITPRISM_PATH_LIBRARY . '/ui/helpers');
+                JHtml::addIncludePath(JPATH_COMPONENT . '/helpers/html');
                 JHtml::_("crowdfunding.bootstrap");
                 JHtml::_("itprism.ui.bootstrap_modal");
             }
         }
-        
+
         // Load the script that initializes the select element with banks.
-        $doc->addScript($pluginURI."/js/plg_crowdfundingpayment_banktransfer.js?v=".rawurlencode($this->version));
-        
-        $html   =  array();
-        $html[] = '<h4><img src="'.$pluginURI.'/images/bank_icon.png" width="30" height="26" />'.JText::_($this->textPrefix."_TITLE").'</h4>';
-        $html[] = '<div>'.nl2br($this->params->get("beneficiary")).'</div>';
-        
+        $doc->addScript($pluginURI . "/js/plg_crowdfundingpayment_banktransfer.js?v=" . rawurlencode($this->version));
+
+        $html   = array();
+        $html[] = '<h4><img src="' . $pluginURI . '/images/bank_icon.png" width="30" height="26" />' . JText::_($this->textPrefix . "_TITLE") . '</h4>';
+        $html[] = '<div>' . nl2br($this->params->get("beneficiary")) . '</div>';
+
         // Check for valid beneficiary information. If missing information, display error message.
-        $beneficiaryInfo = JString::trim( strip_tags($this->params->get("beneficiary")) );
-        if(!$beneficiaryInfo) {
-            $html[] = '<div class="alert">'.JText::_($this->textPrefix."_ERROR_PLUGIN_NOT_CONFIGURED").'</div>';
+        $beneficiaryInfo = JString::trim(strip_tags($this->params->get("beneficiary")));
+        if (!$beneficiaryInfo) {
+            $html[] = '<div class="alert">' . JText::_($this->textPrefix . "_ERROR_PLUGIN_NOT_CONFIGURED") . '</div>';
+
             return implode("\n", $html);
         }
-        
-        if($this->params->get("display_additional_info", 1)) {
+
+        if ($this->params->get("display_additional_info", 1)) {
             $additionalInfo = JString::trim($this->params->get("additional_info"));
-            if(!empty($additionalInfo)) {
-                $html[] = '<p class="sticky">'.htmlspecialchars($additionalInfo, ENT_QUOTES, "UTF-8").'</p>';
+            if (!empty($additionalInfo)) {
+                $html[] = '<p class="sticky">' . htmlspecialchars($additionalInfo, ENT_QUOTES, "UTF-8") . '</p>';
             } else {
-                $html[] = '<p class="sticky">'.JText::_($this->textPrefix."_INFO").'</p>';
+                $html[] = '<p class="sticky">' . JText::_($this->textPrefix . "_INFO") . '</p>';
             }
         }
-        
+
         $html[] = '<div class="alert hide" id="js-bt-alert"></div>';
-            
+
         $html[] = '<div class="clearfix"></div>';
-        $html[] = '<a href="#" class="btn btn-primary" id="js-register-bt">'.JText::_($this->textPrefix."_MAKE_BANK_TRANSFER").'</a>';
-        $html[] = '<a href="#" class="btn btn-success hide" id="js-continue-bt">'.JText::_($this->textPrefix."_CONTINUE_NEXT_STEP").'</a>';
-        
+        $html[] = '<a href="#" class="btn btn-primary" id="js-register-bt">' . JText::_($this->textPrefix . "_MAKE_BANK_TRANSFER") . '</a>';
+        $html[] = '<a href="#" class="btn btn-success hide" id="js-continue-bt">' . JText::_($this->textPrefix . "_CONTINUE_NEXT_STEP") . '</a>';
+
         $html[] = '    
     <div class="modal hide fade" id="js-banktransfer-modal">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h3>'.JText::_($this->textPrefix."_TITLE").'</h3>
+            <h3>' . JText::_($this->textPrefix . "_TITLE") . '</h3>
         </div>
         <div class="modal-body">
-            <p>'.JText::_($this->textPrefix."_REGISTER_TRANSACTION_QUESTION").'</p>
+            <p>' . JText::_($this->textPrefix . "_REGISTER_TRANSACTION_QUESTION") . '</p>
         </div>
         <div class="modal-footer">
             <img src="media/com_crowdfunding/images/ajax-loader.gif" width="16" height="16" id="js-banktransfer-ajax-loading" style="display: none;" />
-            <button class="btn btn-primary" id="js-btbtn-yes" data-project-id="'.$item->id.'" data-amount="'.$item->amount.'">'.JText::_("JYES").'</button>
-            <button class="btn" id="js-btbtn-no">'.JText::_("JNO").'</button>
+            <button class="btn btn-primary" id="js-btbtn-yes" data-project-id="' . $item->id . '" data-amount="' . $item->amount . '">' . JText::_("JYES") . '</button>
+            <button class="btn" id="js-btbtn-no">' . JText::_("JNO") . '</button>
         </div>
     </div>';
-        
+
         return implode("\n", $html);
-        
+
     }
-    
-    public function onPaymentsPreparePayment($context, $params) {
-        
-        if(strcmp("com_crowdfunding.payments.preparepayment.banktransfer", $context) != 0){
-            return;
+
+    /**
+     * This method performs the transaction.
+     *
+     * @param string $context
+     * @param Joomla\Registry\Registry $params
+     *
+     * @return null|array
+     */
+    public function onPaymenNotify($context, &$params)
+    {
+        if (strcmp("com_crowdfunding.notify.banktransfer", $context) != 0) {
+            return null;
         }
-        
+
         $app = JFactory::getApplication();
-        /** @var $app JSite **/
-        
-        if($app->isAdmin()) {
-            return;
+        /** @var $app JApplicationSite */
+
+        if ($app->isAdmin()) {
+            return null;
         }
-        
-        $doc     = JFactory::getDocument();
-        /**  @var $doc JDocumentHtml **/
-        
+
+        $doc = JFactory::getDocument();
+        /**  @var $doc JDocumentHtml */
+
         // Check document type
         $docType = $doc->getType();
-        if(strcmp("raw", $docType) != 0){
-            return;
+        if (strcmp("raw", $docType) != 0) {
+            return null;
         }
-         
-        $projectId    = $app->input->getInt("pid");
-        $amount       = $app->input->getFloat("amount");
-        
-        $uri          = JUri::getInstance();
-        
+
+        $projectId = $app->input->getInt("pid");
+        $amount    = $app->input->getFloat("amount");
+
+        // Prepare the array that will be returned by this method
+        $result = array(
+            "project"         => null,
+            "reward"          => null,
+            "transaction"     => null,
+            "redirect_url"    => null,
+            "message"         => null
+        );
+
+        $uri = JUri::getInstance();
+
         // Get project
         jimport("crowdfunding.project");
-        $project    = new CrowdFundingProject($projectId);
-        
+        $project = new CrowdFundingProject(JFactory::getDbo());
+        $project->load($projectId);
+
         // DEBUG DATA
-        JDEBUG ? $this->log->add(JText::_($this->textPrefix."_DEBUG_PROJECT_OBJECT"), $this->debugType, $project->getProperties()) : null;
-        
+        JDEBUG ? $this->log->add(JText::_($this->textPrefix . "_DEBUG_PROJECT_OBJECT"), $this->debugType, $project->getProperties()) : null;
+
         // Check for valid project
-        if(!$project->getId()) {
-        
+        if (!$project->getId()) {
+
             // Log data in the database
             $this->log->add(
-                JText::_($this->textPrefix."_ERROR_INVALID_PROJECT"),
+                JText::_($this->textPrefix . "_ERROR_INVALID_PROJECT"),
                 $this->debugType,
                 array(
                     "PROJECT OBJECT" => $project->getProperties(),
@@ -177,181 +198,178 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin {
                     "_REQUEST"       => $_REQUEST
                 )
             );
-        
-            // Send response to the browser
-            $response = array(
-                "success" => false,
-                "title"   => JText::_($this->textPrefix."_FAIL"),
-                "text"    => JText::_($this->textPrefix."_ERROR_INVALID_PROJECT")
-            );
-        
-            return $response;
+
+            return null;
         }
-        
+
         jimport("crowdfunding.currency");
         $currencyId = $params->get("project_currency");
-        $currency   = CrowdFundingCurrency::getInstance(JFactory::getDbo(), $currencyId);
-        
+        $currency   = CrowdFundingCurrency::getInstance(JFactory::getDbo(), $currencyId, $params);
+
         // Prepare return URL
-        $returnUrl = JString::trim($this->params->get('return_url'));
-        if(!$returnUrl) {
-            $returnUrl = $uri->toString(array("scheme", "host")).JRoute::_(CrowdFundingHelperRoute::getBackingRoute($project->getSlug(), $project->getCatslug(), "share"), false);
+        $result["redirect_url"] = JString::trim($this->params->get('return_url'));
+        if (!$result["redirect_url"]) {
+            $result["redirect_url"] = $uri->toString(array("scheme", "host")) . JRoute::_(CrowdFundingHelperRoute::getBackingRoute($project->getSlug(), $project->getCatslug(), "share"), false);
         }
-        
+
         // DEBUG DATA
-        JDEBUG ? $this->log->add(JText::_($this->textPrefix."_DEBUG_RETURN_URL"), $this->debugType, $returnUrl) : null;
-        
+        JDEBUG ? $this->log->add(JText::_($this->textPrefix . "_DEBUG_RETURN_URL"), $this->debugType, $result["redirect_url"]) : null;
+
         // Intentions
-        
-        $userId       = JFactory::getUser()->get("id");
-        $aUserId      = $app->getUserState("auser_id");
-        
+
+        $userId  = JFactory::getUser()->get("id");
+        $aUserId = $app->getUserState("auser_id");
+
         // Reset anonymous user hash ID,
         // because the intention based in it will be removed when transaction completes.
-        if(!empty($aUserId)) {
+        if (!empty($aUserId)) {
             $app->setUserState("auser_id", "");
         }
-        
-        $intention    = $this->getIntention(array(
-            "user_id"       => $userId,
-            "auser_id"      => $aUserId,
-            "project_id"    => $projectId
+
+        $intention = $this->getIntention(array(
+            "user_id"    => $userId,
+            "auser_id"   => $aUserId,
+            "project_id" => $projectId
         ));
-        
+
         // DEBUG DATA
-        JDEBUG ? $this->log->add(JText::_($this->textPrefix."_DEBUG_INTENTION_OBJECT"), $this->debugType, $intention->getProperties()) : null;
-        
+        JDEBUG ? $this->log->add(JText::_($this->textPrefix . "_DEBUG_INTENTION_OBJECT"), $this->debugType, $intention->getProperties()) : null;
+
         // Validate intention record
-        if(!$intention->getId()) {
-        
+        if (!$intention->getId()) {
+
             // Log data in the database
             $this->log->add(
-                JText::_($this->textPrefix."_ERROR_INVALID_INTENTION"),
+                JText::_($this->textPrefix . "_ERROR_INVALID_INTENTION"),
                 $this->debugType,
                 $intention->getProperties()
             );
-        
+
             // Send response to the browser
             $response = array(
                 "success" => false,
-                "title"   => JText::_($this->textPrefix."_FAIL"),
-                "text"    => JText::_($this->textPrefix."_ERROR_INVALID_PROJECT")
+                "title"   => JText::_($this->textPrefix . "_FAIL"),
+                "text"    => JText::_($this->textPrefix . "_ERROR_INVALID_PROJECT")
             );
-            
+
             return $response;
-        
         }
-        
-        // Validate Reward
+
+        // Validate a reward and update the number of distributed ones.
         // If the user is anonymous, the system will store 0 for reward ID.
         // The anonymous users can't select rewards.
         $rewardId = ($intention->isAnonymous()) ? 0 : (int)$intention->getRewardId();
-        if(!empty($rewardId)) {
-            $rewardId= $this->updateRewards($rewardId, $projectId, $amount);
+        if (!empty($rewardId)) {
+
+            $validData = array(
+                "reward_id"  => $rewardId,
+                "project_id" => $projectId,
+                "txn_amount" => $amount
+            );
+
+            $reward  = $this->updateReward($validData);
+
+            // Validate the reward.
+            if (!$reward) {
+                $rewardId = 0;
+            }
         }
-        
+
         // Prepare transaction data
         jimport("itprism.string");
-        $transactionId   = new ITPrismString();
+        $transactionId = new ITPrismString();
         $transactionId->generateRandomString(12, "BT");
-        
-        $transactinoId   = JString::strtoupper($transactionId);
+
+        $transactionId   = JString::strtoupper($transactionId);
         $transactionData = array(
-            "txn_amount"   => $amount,
-            "txn_currency" => $currency->getAbbr(),
-            "txn_status"   => "pending",
-            "txn_id"       => $transactinoId,
-            "project_id"   => $projectId,
-            "reward_id"    => $rewardId,
-            "investor_id"  => (int)$userId,
-            "receiver_id"  => (int)$project->getUserId(),
-            "service_provider"  => "Bank Transfer"
+            "txn_amount"       => $amount,
+            "txn_currency"     => $currency->getAbbr(),
+            "txn_status"       => "pending",
+            "txn_id"           => $transactionId,
+            "project_id"       => $projectId,
+            "reward_id"        => $rewardId,
+            "investor_id"      => (int)$userId,
+            "receiver_id"      => (int)$project->getUserId(),
+            "service_provider" => "Bank Transfer"
         );
 
         // DEBUG DATA
-        JDEBUG ? $this->log->add(JText::_($this->textPrefix."_DEBUG_TRANSACTION_DATA"), $this->debugType, $transactionData) : null;
-        
+        JDEBUG ? $this->log->add(JText::_($this->textPrefix . "_DEBUG_TRANSACTION_DATA"), $this->debugType, $transactionData) : null;
+
         // Auto complete transaction
-        if($this->params->get("auto_complete", 0)) {
+        if ($this->params->get("auto_complete", 0)) {
             $transactionData["txn_status"] = "completed";
             $project->addFunds($amount);
-            $project->store();
+            $project->updateFunds();
         }
-        
-        // Get properties of the project object.
-        $project = $project->getProperties();
-        $project = JArrayHelper::toObject($project);
-        
+
         // Store transaction data
         jimport("crowdfunding.transaction");
-        $transaction = new CrowdFundingTransaction();
+        $transaction = new CrowdFundingTransaction(JFactory::getDbo());
         $transaction->bind($transactionData);
-        
+
         $transaction->store();
-        
-        // Get properties of the transaction object.
-        $transaction = $transaction->getProperties();
-        $transaction = JArrayHelper::toObject($transaction);
-        
+
+        // Generate object of data, based on the transaction properties.
+        $properties = $transaction->getProperties();
+        $result["transaction"] = JArrayHelper::toObject($properties);
+
+        // Generate object of data, based on the project properties.
+        $properties        = $project->getProperties();
+        $result["project"] = JArrayHelper::toObject($properties);
+
+        // Generate object of data, based on the reward properties.
+        if (!empty($reward)) {
+            $properties       = $reward->getProperties();
+            $result["reward"] = JArrayHelper::toObject($properties);
+        }
+
         // Remove intention
         $intention->delete();
-        
-        // Send mails
-        $this->sendMails($project, $transaction);
-        
-        // Return response
-        $response = array(
-            "success" => true,
-            "title"   => JText::_($this->textPrefix."_SUCCESS"),
-            "text"    => JText::sprintf($this->textPrefix."_TRANSACTION_REGISTERED", $transaction->txn_id, $transaction->txn_id),
-            "data"    => array(
-                "return_url" => $returnUrl
-            )
-        );
-        
-        return $response;
+
+        // Set message to the user.
+        $result["message"] = JText::sprintf($this->textPrefix . "_TRANSACTION_REGISTERED", $transaction->getTransactionId(), $transaction->getTransactionId());
+
+        // DEBUG DATA
+        JDEBUG ? $this->log->add(JText::_($this->textPrefix . "_DEBUG_RESULT_DATA"), $this->debugType, $result) : null;
+
+        return $result;
     }
-    
+
     /**
-     * This method validates reward and update the number
-     * of distributed units, if it is limited.
+     * This method is executed after complete payment.
+     * It is used to be sent mails to user and administrator
      *
-     * @param integer $rewardId
-     * @param integer $projectId
-     * @param integer $amount
+     * @param object $context
+     * @param object $transaction Transaction data
+     * @param Joomla\Registry\Registry $params Component parameters
+     * @param object $project Project data
+     * @param object $reward Reward data
      *
-     * @return integer If there is something wrong, return reward ID 0.
      */
-    protected function updateRewards($rewardId, $projectId, $amount) {
-    
-        jimport("crowdfunding.reward");
-    
-        $keys = array(
-            "id"         => (int)$rewardId,
-            "project_id" => (int)$projectId
-        );
-    
-        $reward = new CrowdFundingReward($rewardId);
-    
-        // Check for valid reward
-        if(!$reward->getId()) {
-            $rewardId = 0;
-            return $rewardId;
+    public function onAfterPayment($context, &$transaction, &$params, &$project, &$reward)
+    {
+        if (strcmp("com_crowdfunding.notify.banktransfer", $context) != 0) {
+            return;
         }
-    
-        // Check for valid amount between reward value and payed by user
-        if($amount < $reward->getAmount()) {
-            $rewardId = 0;
-            return $rewardId;
+
+        $app = JFactory::getApplication();
+        /** @var $app JApplicationSite */
+
+        if ($app->isAdmin()) {
+            return;
         }
-    
-        // Verify the availability of rewards
-        if($reward->isLimited() AND !$reward->getAvailable()) {
-            $rewardId = 0;
-            return $rewardId;
+
+        $doc = JFactory::getDocument();
+        /**  @var $doc JDocumentHtml */
+
+        // Check document type
+        $docType = $doc->getType();
+        if (strcmp("raw", $docType) != 0) {
+            return;
         }
-    
-        return $rewardId;
+
+        // Send mails
+        $this->sendMails($project, $transaction, $params);
     }
-    
 }
