@@ -11,7 +11,7 @@ This is a payment plugin for CrowdFunding platform, which provides an ability to
 Changelog
 ---------
 ###v1.9
-* It was move the HTML code to template file.
+* It was moved the HTML code to template file.
 
 ###v1.8
 * Fixed an issue with rewards. The distributed rewards have not been updated.
