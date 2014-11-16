@@ -6,8 +6,8 @@
     <license>http://www.gnu.org/copyleft/gpl.html GNU/GPL</license>
     <authorEmail>todor@itprism.com</authorEmail>
     <authorUrl>http://itprism.com</authorUrl>
-    <version>1.9</version>
-    <creationDate>30 September, 2014</creationDate>
+    <version>1.10</version>
+    <creationDate>16 November, 2014</creationDate>
     <description><![CDATA[
     <p>CrowdFunding Payment - Bank Transfer is a plugin that provides functionality for preparing a payment via bank transfer.</p>
     <p>Invest in the extension and help for its improvement. You can <a href="http://itprism.com/sponsorship" target="_blank">sponsor the extension via SMS, PayPal or Bitcoin</a>.</p>
@@ -20,9 +20,11 @@
     <files>
         <filename plugin="banktransfer">banktransfer.php</filename>
         <filename>index.html</filename>
-		<folder>language</folder>
-		<folder>images</folder>
-		<folder>js</folder>
+
+        <folder>images</folder>
+        <folder>js</folder>
+        <folder>language</folder>
+		<folder>tmpl</folder>
     </files>
 
     <config>

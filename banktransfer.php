@@ -22,7 +22,7 @@ jimport('crowdfunding.payment.plugin');
 class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
 {
     protected $paymentService = "banktransfer";
-    protected $version = "1.9";
+    protected $version = "1.10";
 
     protected $textPrefix = "PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER";
     protected $debugType = "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG";
@@ -87,7 +87,7 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
      *
      * @return null|array
      */
-    public function onPaymenNotify($context, &$params)
+    public function onPaymentNotify($context, &$params)
     {
         if (strcmp("com_crowdfunding.notify.banktransfer", $context) != 0) {
             return null;
@@ -285,7 +285,7 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
     }
 
     /**
-     * This method is executed after complete payment.
+     * This method is invoked after complete payment.
      * It is used to be sent mails to user and administrator
      *
      * @param object $context
@@ -296,7 +296,7 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
      * @param object $paymentSession Payment session data.
      *
      */
-    public function onAfterPayment($context, &$transaction, &$params, &$project, &$reward, $paymentSession)
+    public function onAfterPayment($context, &$transaction, &$params, &$project, &$reward, &$paymentSession)
     {
         if (strcmp("com_crowdfunding.notify.banktransfer", $context) != 0) {
             return;
