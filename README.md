@@ -1,6 +1,6 @@
 CrowdFunding Payment - Bank Transfer
 ==========================
-( Version 1.10 )
+( Version 1.11 )
 - - -
 
 This is a payment plugin for CrowdFunding platform, which provides an ability to make payments via bank transfer.
@@ -11,18 +11,11 @@ This is a payment plugin for CrowdFunding platform, which provides an ability to
 Changelog
 ---------
 
-###v1.10
-* Improved
-
 ###v1.9
 * It was moved the HTML code to template file.
 
 ###v1.8
 * Fixed an issue with rewards. The distributed rewards have not been updated.
-* Improved.
-
-###v1.7
-* Improved.
 
 ###v1.6
 * Added options for selecting emails, which will be send to a backer, a project owner and the administrator.
@@ -38,6 +31,3 @@ Changelog
 ###v1.2
 * Edited the size of some fields.
 * Fixed bootstrap modal.
-
-###v1.1
-* Improved

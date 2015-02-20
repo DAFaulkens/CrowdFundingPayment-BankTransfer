@@ -3,7 +3,7 @@
  * @package      CrowdFunding
  * @subpackage   Plugins
  * @author       Todor Iliev
- * @copyright    Copyright (C) 2014 Todor Iliev <todor@itprism.com>. All rights reserved.
+ * @copyright    Copyright (C) 2015 Todor Iliev <todor@itprism.com>. All rights reserved.
  * @license      http://www.gnu.org/copyleft/gpl.html GNU/GPL
  */
 
@@ -22,7 +22,7 @@ jimport('crowdfunding.payment.plugin');
 class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
 {
     protected $paymentService = "banktransfer";
-    protected $version = "1.10";
+    protected $version        = "1.11";
 
     protected $textPrefix = "PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER";
     protected $debugType = "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG";
@@ -149,13 +149,14 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
         $currency   = CrowdFundingCurrency::getInstance(JFactory::getDbo(), $currencyId, $params);
 
         // Prepare return URL
-        $filter = JFilterInput::getInstance();
-
-        $uri = JUri::getInstance();
-        $domain = $filter->clean($uri->toString(array("scheme", "host")));
-
         $result["redirect_url"] = JString::trim($this->params->get('return_url'));
         if (!$result["redirect_url"]) {
+
+            $filter = JFilterInput::getInstance();
+
+            $uri = JUri::getInstance();
+            $domain = $filter->clean($uri->toString(array("scheme", "host")));
+
             $result["redirect_url"] = $domain . JRoute::_(CrowdFundingHelperRoute::getBackingRoute($project->getSlug(), $project->getCatslug(), "share"), false);
         }
 

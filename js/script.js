@@ -1,5 +1,6 @@
 jQuery(document).ready(function() {
-	 
+	"use strict";
+
 	jQuery("#js-register-bt").on("click", function(event){
 		event.preventDefault();
 		jQuery('#js-banktransfer-modal').modal("show");
