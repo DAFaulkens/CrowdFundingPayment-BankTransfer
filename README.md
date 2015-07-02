@@ -1,12 +1,12 @@
-CrowdFunding Payment - Bank Transfer
+Crowdfunding Payment - Bank Transfer
 ==========================
-( Version 1.11 )
+( Version 2.0 )
 - - -
 
-This is a payment plugin for CrowdFunding platform, which provides an ability to make payments via bank transfer.
+This is a payment plugin for Crowdfunding platform, which provides an ability to make payments via bank transfer.
 
 ##Download
-[Download Bank Transfer plugin] (http://itprism.com/free-joomla-extensions/ecommerce-gamification/crowdfunding-collective-raising-capital) from the CrowdFunding page.
+[Download Bank Transfer plugin] (http://itprism.com/free-joomla-extensions/ecommerce-gamification/crowdfunding-collective-raising-capital) from the Crowdfunding page.
 
 Changelog
 ---------
@@ -26,7 +26,7 @@ Changelog
 * Improved the functionality for logging errors and debugging.
 
 ###v1.4
-* Synchronized with the new version of CrowdFunding ( v1.4.3 )
+* Synchronized with the new version of Crowdfunding ( v1.4.3 )
 
 ###v1.2
 * Edited the size of some fields.

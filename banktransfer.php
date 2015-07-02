@@ -1,6 +1,6 @@
 <?php
 /**
- * @package      CrowdFunding
+ * @package      Crowdfunding
  * @subpackage   Plugins
  * @author       Todor Iliev
  * @copyright    Copyright (C) 2015 Todor Iliev <todor@itprism.com>. All rights reserved.
@@ -10,19 +10,20 @@
 // no direct access
 defined('_JEXEC') or die;
 
-jimport('crowdfunding.init');
-jimport('crowdfunding.payment.plugin');
+jimport("Prism.init");
+jimport("Crowdfunding.init");
+jimport("EmailTemplates.init");
 
 /**
- * CrowdFunding Bank Transfer Payment Plugin
+ * Crowdfunding Bank Transfer Payment Plugin
  *
- * @package      CrowdFunding
+ * @package      Crowdfunding
  * @subpackage   Plugins
  */
-class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
+class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
 {
     protected $paymentService = "banktransfer";
-    protected $version        = "1.11";
+    protected $version        = "2.0";
 
     protected $textPrefix = "PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER";
     protected $debugType = "BANKTRANSFER_PAYMENT_PLUGIN_DEBUG";
@@ -61,12 +62,8 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
             return null;
         }
 
-        // Load Twitter Bootstrap and its styles,
-        // because I am going to use them for a modal window.
-        if ($params->get("bootstrap_modal", false)) {
-            JHtml::_("bootstrap.framework");
-            JHtml::_("itprism.ui.bootstrap_modal");
-        }
+        JHtml::_('jquery.framework');
+        JText::script('PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_REGISTER_TRANSACTION_QUESTION');
 
         // Get the path for the layout file
         $path = JPath::clean(JPluginHelper::getLayoutPath('crowdfundingpayment', 'banktransfer'));
@@ -120,8 +117,7 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
         );
 
         // Get project
-        jimport("crowdfunding.project");
-        $project = new CrowdFundingProject(JFactory::getDbo());
+        $project = new Crowdfunding\Project(JFactory::getDbo());
         $project->load($projectId);
 
         // DEBUG DATA
@@ -144,12 +140,11 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
             return null;
         }
 
-        jimport("crowdfunding.currency");
         $currencyId = $params->get("project_currency");
-        $currency   = CrowdFundingCurrency::getInstance(JFactory::getDbo(), $currencyId, $params);
+        $currency   = Crowdfunding\Currency::getInstance(JFactory::getDbo(), $currencyId, $params);
 
         // Prepare return URL
-        $result["redirect_url"] = JString::trim($this->params->get('return_url'));
+        $result["redirect_url"] = Joomla\String\String::trim($this->params->get('return_url'));
         if (!$result["redirect_url"]) {
 
             $filter = JFilterInput::getInstance();
@@ -157,40 +152,41 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
             $uri = JUri::getInstance();
             $domain = $filter->clean($uri->toString(array("scheme", "host")));
 
-            $result["redirect_url"] = $domain . JRoute::_(CrowdFundingHelperRoute::getBackingRoute($project->getSlug(), $project->getCatslug(), "share"), false);
+            $result["redirect_url"] = $domain . JRoute::_(CrowdfundingHelperRoute::getBackingRoute($project->getSlug(), $project->getCatslug(), "share"), false);
         }
 
         // DEBUG DATA
         JDEBUG ? $this->log->add(JText::_($this->textPrefix . "_DEBUG_RETURN_URL"), $this->debugType, $result["redirect_url"]) : null;
 
-        // Intentions
+        // Payment Session
 
         $userId  = JFactory::getUser()->get("id");
         $aUserId = $this->app->getUserState("auser_id");
 
         // Reset anonymous user hash ID,
-        // because the intention based in it will be removed when transaction completes.
+        // because the payment session based in it will be removed when transaction completes.
         if (!empty($aUserId)) {
             $this->app->setUserState("auser_id", "");
         }
 
-        $intention = $this->getIntention(array(
-            "user_id"    => $userId,
-            "auser_id"   => $aUserId,
-            "project_id" => $projectId
+        $paymentSessionContext    = Crowdfunding\Constants::PAYMENT_SESSION_CONTEXT . $project->getId();
+        $paymentSessionLocal      = $this->app->getUserState($paymentSessionContext);
+
+        $paymentSession = $this->getPaymentSession(array(
+            "session_id"    => $paymentSessionLocal->session_id
         ));
 
         // DEBUG DATA
-        JDEBUG ? $this->log->add(JText::_($this->textPrefix . "_DEBUG_INTENTION_OBJECT"), $this->debugType, $intention->getProperties()) : null;
+        JDEBUG ? $this->log->add(JText::_($this->textPrefix . "_DEBUG_PAYMENT_SESSION_OBJECT"), $this->debugType, $paymentSession->getProperties()) : null;
 
-        // Validate intention record
-        if (!$intention->getId()) {
+        // Validate payment session record.
+        if (!$paymentSession->getId()) {
 
             // Log data in the database
             $this->log->add(
-                JText::_($this->textPrefix . "_ERROR_INVALID_INTENTION"),
+                JText::_($this->textPrefix . "_ERROR_INVALID_PAYMENT_SESSION"),
                 $this->debugType,
-                $intention->getProperties()
+                $paymentSession->getProperties()
             );
 
             // Send response to the browser
@@ -206,7 +202,7 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
         // Validate a reward and update the number of distributed ones.
         // If the user is anonymous, the system will store 0 for reward ID.
         // The anonymous users can't select rewards.
-        $rewardId = ($intention->isAnonymous()) ? 0 : (int)$intention->getRewardId();
+        $rewardId = ($paymentSession->isAnonymous()) ? 0 : (int)$paymentSession->getRewardId();
         if (!empty($rewardId)) {
 
             $validData = array(
@@ -224,14 +220,13 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
         }
 
         // Prepare transaction data
-        jimport("itprism.string");
-        $transactionId = new ITPrismString();
+        $transactionId = new Prism\String();
         $transactionId->generateRandomString(12, "BT");
 
-        $transactionId   = JString::strtoupper($transactionId);
+        $transactionId   = Joomla\String\String::strtoupper($transactionId);
         $transactionData = array(
             "txn_amount"       => $amount,
-            "txn_currency"     => $currency->getAbbr(),
+            "txn_currency"     => $currency->getCode(),
             "txn_status"       => "pending",
             "txn_id"           => $transactionId,
             "project_id"       => $projectId,
@@ -248,39 +243,42 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
         if ($this->params->get("auto_complete", 0)) {
             $transactionData["txn_status"] = "completed";
             $project->addFunds($amount);
-            $project->updateFunds();
+            $project->storeFunds();
         }
 
         // Store transaction data
-        jimport("crowdfunding.transaction");
-        $transaction = new CrowdFundingTransaction(JFactory::getDbo());
+        $transaction = new Crowdfunding\Transaction(JFactory::getDbo());
         $transaction->bind($transactionData);
 
         $transaction->store();
 
         // Generate object of data, based on the transaction properties.
         $properties = $transaction->getProperties();
-        $result["transaction"] = JArrayHelper::toObject($properties);
+        $result["transaction"] = Joomla\Utilities\ArrayHelper::toObject($properties);
 
         // Generate object of data, based on the project properties.
         $properties        = $project->getProperties();
-        $result["project"] = JArrayHelper::toObject($properties);
+        $result["project"] = Joomla\Utilities\ArrayHelper::toObject($properties);
 
         // Generate object of data, based on the reward properties.
         if (!empty($reward)) {
             $properties       = $reward->getProperties();
-            $result["reward"] = JArrayHelper::toObject($properties);
+            $result["reward"] = Joomla\Utilities\ArrayHelper::toObject($properties);
         }
 
-        // Generate data object, based on the intention properties.
-        $properties       = $intention->getProperties();
-        $result["payment_session"] = JArrayHelper::toObject($properties);
+        // Generate data object, based on the payment session properties.
+        $properties       = $paymentSession->getProperties();
+        $result["payment_session"] = Joomla\Utilities\ArrayHelper::toObject($properties);
 
         // Set message to the user.
         $result["message"] = JText::sprintf($this->textPrefix . "_TRANSACTION_REGISTERED", $transaction->getTransactionId(), $transaction->getTransactionId());
 
         // DEBUG DATA
         JDEBUG ? $this->log->add(JText::_($this->textPrefix . "_DEBUG_RESULT_DATA"), $this->debugType, $result) : null;
+
+        // Close payment session and remove payment session record.
+        $txnStatus = (isset($result["transaction"]->txn_status)) ? $result["transaction"]->txn_status : null;
+        $this->closePaymentSession($paymentSession, $txnStatus);
 
         return $result;
     }
@@ -295,7 +293,6 @@ class plgCrowdFundingPaymentBankTransfer extends CrowdFundingPaymentPlugin
      * @param object $project Project data
      * @param object $reward Reward data
      * @param object $paymentSession Payment session data.
-     *
      */
     public function onAfterPayment($context, &$transaction, &$params, &$project, &$reward, &$paymentSession)
     {
