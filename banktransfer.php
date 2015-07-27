@@ -314,6 +314,6 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         }
 
         // Send mails
-        $this->sendMails($project, $transaction, $params);
+        $this->sendMails($project, $transaction, $params, $reward);
     }
 }

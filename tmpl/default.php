@@ -34,9 +34,9 @@ if ($this->params->get("display_additional_info", 1)) {
     $additionalInfo = JString::trim($this->params->get("additional_info"));
 
     if (!empty($additionalInfo)) {?>
-    <p class="bg-info p-5"><i class="glyphicon glyphicon-info-sign"></i><?php echo htmlspecialchars($additionalInfo, ENT_QUOTES, "UTF-8"); ?></p>;
+    <p class="bg-info p-5"><span class="glyphicon glyphicon-info-sign"></span> <?php echo htmlspecialchars($additionalInfo, ENT_QUOTES, "UTF-8"); ?></p>
     <?php } else { ?>
-    <p class="bg-info p-5"><i class="glyphicon glyphicon-info-sign"></i><?php echo JText::_($this->textPrefix . "_INFO"); ?></p>
+    <p class="bg-info p-5"><span class="glyphicon glyphicon-info-sign"></span> <?php echo JText::_($this->textPrefix . "_INFO"); ?></p>
     <?php } ?>
 
 <?php } ?>
