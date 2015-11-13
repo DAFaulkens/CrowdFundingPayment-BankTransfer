@@ -1,6 +1,6 @@
 Crowdfunding Payment - Bank Transfer
 ==========================
-( Version 2.1 )
+( Version 2.2 )
 - - -
 
 This is a payment plugin for Crowdfunding platform, which provides an ability to make payments via bank transfer.
