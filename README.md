@@ -1,6 +1,6 @@
 Crowdfunding Payment - Bank Transfer
 ==========================
-( Version 2.2 )
+( Version 2.3 )
 - - -
 
 This is a payment plugin for Crowdfunding platform, which provides an ability to make payments via bank transfer.
@@ -10,6 +10,10 @@ This is a payment plugin for Crowdfunding platform, which provides an ability to
 
 Changelog
 ---------
+
+###v2.3
+* Fixed an issue that did not allow to send emails via Email Tempaltes.
+* Added update server. Now, it will be possible to update the extension via Joomla! update manager.
 
 ###v2.1
 * Provided information about reward during the process of sending confirmation mails.

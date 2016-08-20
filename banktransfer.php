@@ -3,7 +3,7 @@
  * @package      Crowdfunding
  * @subpackage   Plugins
  * @author       Todor Iliev
- * @copyright    Copyright (C) 2015 Todor Iliev <todor@itprism.com>. All rights reserved.
+ * @copyright    Copyright (C) 2016 Todor Iliev <todor@itprism.com>. All rights reserved.
  * @license      GNU General Public License version 3 or later; see LICENSE.txt
  */
 
@@ -12,7 +12,7 @@ defined('_JEXEC') or die;
 
 jimport('Prism.init');
 jimport('Crowdfunding.init');
-jimport('EmailTemplates.init');
+jimport('Emailtemplates.init');
 
 /**
  * Crowdfunding Bank Transfer Payment Plugin
@@ -22,7 +22,7 @@ jimport('EmailTemplates.init');
  */
 class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
 {
-    protected $version        = '2.2';
+    protected $version        = '2.3';
 
     public function __construct(&$subject, $config = array())
     {
@@ -30,8 +30,8 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
 
         $this->serviceProvider = 'Bank Transfer';
         $this->serviceAlias    = 'banktransfer';
-        $this->textPrefix     .= '_' . \JString::strtoupper($this->serviceAlias);
-        $this->debugType      .= '_' . \JString::strtoupper($this->serviceAlias);
+        $this->textPrefix     .= '_' . strtoupper($this->serviceAlias);
+        $this->debugType      .= '_' . strtoupper($this->serviceAlias);
     }
 
     /**
@@ -74,7 +74,6 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         $html = ob_get_clean();
 
         return $html;
-
     }
 
     /**
@@ -82,6 +81,9 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
      *
      * @param string $context
      * @param Joomla\Registry\Registry $params
+     *
+     * @throws \UnexpectedValueException
+     * @throws \InvalidArgumentException
      *
      * @return null|array
      */
@@ -126,7 +128,6 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
 
         // Check for valid project
         if (!$project->getId()) {
-
             // Log data in the database
             $this->log->add(
                 JText::_($this->textPrefix . '_ERROR_INVALID_PROJECT'),
@@ -147,7 +148,6 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         // Prepare return URL
         $result['redirect_url'] = JString::trim($this->params->get('return_url'));
         if (!$result['redirect_url']) {
-
             $filter = JFilterInput::getInstance();
 
             $uri    = JUri::getInstance();
@@ -166,7 +166,7 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
 
         // Reset anonymous user hash ID,
         // because the payment session based in it will be removed when transaction completes.
-        if (JString::strlen($aUserId) > 0) {
+        if (strlen($aUserId) > 0) {
             $this->app->setUserState('auser_id', '');
         }
 
@@ -182,7 +182,6 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
 
         // Validate payment session record.
         if (!$paymentSession->getId()) {
-
             // Log data in the database
             $this->log->add(
                 JText::_($this->textPrefix . '_ERROR_INVALID_PAYMENT_SESSION'),
@@ -206,7 +205,6 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         $rewardId = ($paymentSession->isAnonymous()) ? 0 : (int)$paymentSession->getRewardId();
         $reward   = null;
         if ($rewardId > 0) {
-
             $validData = array(
                 'reward_id'  => $rewardId,
                 'project_id' => $projectId,
@@ -222,14 +220,12 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         }
 
         // Prepare transaction data
-        $transactionId = Prism\Utilities\StringHelper::generateRandomString(12, 'BT');
-
-        $transactionId   = JString::strtoupper($transactionId);
+        $transactionId   = Prism\Utilities\StringHelper::generateRandomString(12, 'BT');
         $transactionData = array(
             'txn_amount'       => $amount,
             'txn_currency'     => $currency->getCode(),
             'txn_status'       => 'pending',
-            'txn_id'           => $transactionId,
+            'txn_id'           => strtoupper($transactionId),
             'project_id'       => $projectId,
             'reward_id'        => $rewardId,
             'investor_id'      => (int)$userId,
@@ -279,7 +275,7 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         JDEBUG ? $this->log->add(JText::_($this->textPrefix . '_DEBUG_RESULT_DATA'), $this->debugType, $result) : null;
 
         // Close payment session and remove payment session record.
-        $txnStatus = (isset($result['transaction']->txn_status)) ? $result['transaction']->txn_status : null;
+        $txnStatus = (array_key_exists('transaction', $result) and isset($result['transaction']->txn_status)) ? $result['transaction']->txn_status : null;
         $this->closePaymentSession($paymentSession, $txnStatus);
 
         return $result;
