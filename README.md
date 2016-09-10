@@ -1,6 +1,6 @@
 Crowdfunding Payment - Bank Transfer
 ==========================
-( Version 2.3 )
+( Version 2.4 )
 - - -
 
 This is a payment plugin for Crowdfunding platform, which provides an ability to make payments via bank transfer.
@@ -10,6 +10,9 @@ This is a payment plugin for Crowdfunding platform, which provides an ability to
 
 Changelog
 ---------
+
+###v2.4
+* It was made compatible with Crowdfunding Platform v2.5.
 
 ###v2.3
 * Fixed an issue that did not allow to send emails via Email Tempaltes.

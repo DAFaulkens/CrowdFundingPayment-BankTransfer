@@ -25,21 +25,17 @@ $doc->addScript('plugins/crowdfundingpayment/banktransfer/js/script.js?v='.rawur
 // Check for valid beneficiary information. If missing information, display error message.
 $beneficiaryInfo = JString::trim(strip_tags($this->params->get('beneficiary')));
 if (!$beneficiaryInfo) {?>
-    <div class="alert"><?php echo JText::_($this->textPrefix . '_ERROR_PLUGIN_NOT_CONFIGURED'); ?></div>
-    <?php
-    return;
-}?>
-
-    <div><?php echo nl2br($this->params->get('beneficiary')); ?></div>
-
+<div class="alert alter-warning"><?php echo JText::_($this->textPrefix . '_ERROR_PLUGIN_NOT_CONFIGURED'); ?></div>
+<?php return; } ?>
+<div><?php echo nl2br($this->params->get('beneficiary')); ?></div>
 <?php
 if ($this->params->get('display_additional_info', 1)) {
     $additionalInfo = Joomla\String\StringHelper::trim($this->params->get('additional_info'));
 
     if ($additionalInfo !== null and $additionalInfo !== '') {?>
-    <p class="bg-info p-5"><span class="glyphicon glyphicon-info-sign"></span> <?php echo htmlspecialchars($additionalInfo, ENT_QUOTES, 'UTF-8'); ?></p>
+    <p class="bg-info p-5"><span class="fa fa-info-circle"></span> <?php echo htmlspecialchars($additionalInfo, ENT_QUOTES, 'UTF-8'); ?></p>
     <?php } else { ?>
-    <p class="bg-info p-5"><span class="glyphicon glyphicon-info-sign"></span> <?php echo JText::_($this->textPrefix . '_INFO'); ?></p>
+    <p class="bg-info p-5"><span class="fa fa-info-circle"></span> <?php echo JText::_($this->textPrefix . '_INFO'); ?></p>
     <?php } ?>
 
 <?php } ?>
@@ -49,7 +45,7 @@ if ($this->params->get('display_additional_info', 1)) {
     </button>
     <img src="media/com_crowdfunding/images/ajax-loader.gif" width="16" height="16" id="js-banktransfer-ajax-loading" style="display: none;" />
     <a href="#" class="btn btn-success" id="js-continue-bt" style="display: none;" role="button">
-        <span class="glyphicon glyphicon-chevron-right"></span>
+        <span class="fa fa-chevron-right"></span>
         <?php echo JText::_($this->textPrefix . '_CONTINUE_NEXT_STEP'); ?>
     </a>
 </div>
