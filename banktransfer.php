@@ -42,6 +42,7 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         $this->serviceAlias    = 'banktransfer';
         $this->textPrefix     .= '_' . strtoupper($this->serviceAlias);
         $this->debugType      .= '_' . strtoupper($this->serviceAlias);
+        $this->errorType      .= '_' . strtoupper($this->serviceAlias);
     }
 
     /**
@@ -52,9 +53,10 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
      * @param stdClass  $item    A project data.
      * @param Joomla\Registry\Registry $params  The parameters of the component
      *
+     * @throws \InvalidArgumentException
      * @return null|string
      */
-    public function onProjectPayment($context, &$item, &$params)
+    public function onProjectPayment($context, $item, $params)
     {
         if (strcmp('com_crowdfunding.payment', $context) !== 0) {
             return null;
