@@ -271,9 +271,7 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         // Set message to the user.
         $paymentResult->message = JText::sprintf($this->textPrefix . '_TRANSACTION_REGISTERED', $transaction->getTransactionId(), $transaction->getTransactionId());
 
-        // Prepare the flag for removing intention.
-        $removeIntention  = (strcmp('completed', $transaction->getStatus()) === 0 or strcmp('pending', $transaction->getStatus()) === 0);
-        $this->closePaymentSession($paymentSessionRemote, $removeIntention);
+        $this->removeIntention($paymentSessionRemote, $transaction);
 
         return $paymentResult;
     }
