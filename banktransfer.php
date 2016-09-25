@@ -36,13 +36,10 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
 
     public function __construct(&$subject, $config = array())
     {
-        parent::__construct($subject, $config);
-
         $this->serviceProvider = 'Bank Transfer';
         $this->serviceAlias    = 'banktransfer';
-        $this->textPrefix     .= '_' . strtoupper($this->serviceAlias);
-        $this->debugType      .= '_' . strtoupper($this->serviceAlias);
-        $this->errorType      .= '_' . strtoupper($this->serviceAlias);
+
+        parent::__construct($subject, $config);
     }
 
     /**
