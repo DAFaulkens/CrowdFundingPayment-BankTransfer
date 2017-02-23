@@ -2,14 +2,14 @@
 <extension version="3.6" type="plugin" group="crowdfundingpayment" method="upgrade">
     <name>PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER</name>
     <author>Todor Iliev</author>
-    <copyright>Copyright (C) 2016 Todor Iliev ( ITPrism.com ). All rights reserved.</copyright>
+    <copyright>Copyright (C) 2017 Todor Iliev ( ITPrism.com ). All rights reserved.</copyright>
     <license>http://www.gnu.org/licenses/gpl-3.0.en.html GNU/GPLv3</license>
     <authorEmail>todor@itprism.com</authorEmail>
     <authorUrl>http://itprism.com</authorUrl>
-    <version>2.4</version>
-    <creationDate>18 September, 2016</creationDate>
+    <version>2.5</version>
+    <creationDate>23 February, 2017</creationDate>
     <description><![CDATA[
-    <p>CrowdfundingPayment - Bank Transfer is a plugin that provides functionality for preparing a payment via bank transfer.</p>
+    <p>CrowdfundingPayment - Bank Transfer is a plugin that enables payments via bank transfer (offline payment).</p>
     <p><a href='http://itprism.com/' target='_blank'>Subscribe for the newsletter</a> to receive information about updates and new ITPrism extensions.</p>
     <p>Please, <a href='http://extensions.joomla.org/extensions/extension/e-commerce/donations/crowdfunding' target='_blank'>vote for the extension</a> on Joomla! Extensions Directory</p>
     ]]></description>
@@ -28,23 +28,7 @@
     <config>
 		<fields name="params" addfieldpath="/administrator/components/com_crowdfunding/models/fields">
 			<fieldset name="basic">
-    	        <field name="beneficiary" type="editor" buttons="false"
-                    label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_BENEFICIARY" 
-                    description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_BENEFICIARY_DESC" 
-                    rows="15" 
-                    filter="safehtml"
-                />
-    	        <field name="return_url" type="text" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_RETURN_URL" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_RETURN_URL_DESC" class="span6" size="100" />
-                
-                <field name="auto_complete" type="radio" default="0" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_AUTO_COMPLETE" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_AUTO_COMPLETE_DESC" class="btn-group" >
-                    <option value="0">JNO</option>
-                    <option value="1">JYES</option>
-                </field>
-                <field name="display_additional_info" type="radio" default="0" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DISPLAY_ADDITIONAL_INFO" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DISPLAY_ADDITIONAL_INFO_DESC" class="btn-group" >
-                    <option value="0">JNO</option>
-                    <option value="1">JYES</option>
-                </field>
-                <field name="additional_info" type="textarea" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ADDITIONAL_INFO" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ADDITIONAL_INFO_DESC" class="span6" rows="5" cols="60" />
+    	        <field name="beneficiary" type="textarea" buttons="false" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_BENEFICIARY" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_BENEFICIARY_DESC" rows="15" class="input-xxlarge"/>
             </fieldset>
             
             <fieldset name="emails" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_NOTIFICATION_EMAILS" addfieldpath="/administrator/components/com_emailtemplates/models/fields">
@@ -57,10 +41,32 @@
                    <option value="html">PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_HTML</option>
                 </field>
 			</fieldset>
+
+            <fieldset name="advanced">
+                <field name="auto_complete" type="radio" default="0" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_AUTO_COMPLETE" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_AUTO_COMPLETE_DESC" class="btn-group" >
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <field name="display_additional_info" type="radio" default="0" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DISPLAY_ADDITIONAL_INFO" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_DISPLAY_ADDITIONAL_INFO_DESC" class="btn-group" >
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <field name="additional_info" type="textarea" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ADDITIONAL_INFO" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_ADDITIONAL_INFO_DESC" class="input-xxlarge" rows="5" cols="60" />
+                <field name="show_iban" type="radio" default="0" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_SHOW_IBAN" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_SHOW_IBAN_DESC" class="btn-group" >
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <field name="iban" type="text" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_IBAN" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_IBAN_DESC" class="input-xxlarge" />
+                <field name="payment_receiver" type="list" default="site_owner" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_PAYMENT_RECEIVER" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_PAYMENT_RECEIVER_DESC">
+                    <option value="site_owner">PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_SITE_OWNER</option>
+                    <option value="project_owner">PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_PROJECT_OWNER</option>
+                </field>
+                <field name="return_url" type="text" label="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_RETURN_URL" description="PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_RETURN_URL_DESC" class="input-xxlarge" size="100" />
+            </fieldset>
         </fields>
 	</config>
 
     <updateservers>
-        <server type="extension" priority="1" name="CrowdfundingPayment - Bank Transfer ( from CDN )">http://cdn.itprism.com/updates/crowdfunding/plugins/plg_crowdfundingpayment_banktransfer.xml</server>
+        <server type="extension" priority="1" name="CrowdfundingPayment - Bank Transfer">http://cdn.itprism.com/updates/crowdfunding/plugins/plg_crowdfundingpayment_banktransfer.xml</server>
     </updateservers>
 </extension>

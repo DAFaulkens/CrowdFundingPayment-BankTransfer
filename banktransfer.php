@@ -3,13 +3,15 @@
  * @package      Crowdfunding
  * @subpackage   Plugins
  * @author       Todor Iliev
- * @copyright    Copyright (C) 2016 Todor Iliev <todor@itprism.com>. All rights reserved.
+ * @copyright    Copyright (C) 2017 Todor Iliev <todor@itprism.com>. All rights reserved.
  * @license      GNU General Public License version 3 or later; see LICENSE.txt
  */
 
 use Crowdfunding\Transaction\Transaction;
 use Crowdfunding\Transaction\TransactionManager;
-use Crowdfunding\Reward;
+use Crowdfunding\Payment;
+use Joomla\Registry\Registry;
+use Prism\Payment\Result as PaymentResult;
 
 // no direct access
 defined('_JEXEC') or die;
@@ -18,11 +20,7 @@ jimport('Prism.init');
 jimport('Crowdfunding.init');
 jimport('Emailtemplates.init');
 
-JObserverMapper::addObserverClassToClass(
-    'Crowdfunding\\Observer\\Transaction\\TransactionObserver',
-    'Crowdfunding\\Transaction\\TransactionManager',
-    array('typeAlias' => 'com_crowdfunding.payment')
-);
+JObserverMapper::addObserverClassToClass(Crowdfunding\Observer\Transaction\TransactionObserver::class, Crowdfunding\Transaction\TransactionManager::class, array('typeAlias' => 'com_crowdfunding.payment'));
 
 /**
  * Crowdfunding Bank Transfer Payment Plugin
@@ -30,9 +28,13 @@ JObserverMapper::addObserverClassToClass(
  * @package      Crowdfunding
  * @subpackage   Plugins
  */
-class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
+class plgCrowdfundingPaymentBankTransfer extends Payment\Plugin
 {
-    protected $version        = '2.4';
+    protected $payout;
+    protected $version = '2.5';
+
+    protected $iban;
+    protected $bankAccount;
 
     public function __construct(&$subject, $config = array())
     {
@@ -72,6 +74,17 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
             return null;
         }
 
+        $this->prepareBeneficiary($item->id);
+
+        // Include IBAN to information about bank account.
+        if ((bool)$this->params->get('show_iban', 0) and $this->iban !== '') {
+            if (false !== strpos($this->bankAccount, '{IBAN}')) {
+                $this->bankAccount = str_replace('{IBAN}', $this->iban, $this->bankAccount);
+            } else {
+                $this->bankAccount .= '<p><strong>'.JText::_($this->textPrefix . '_IBAN').'</strong>: '. $this->iban.'</p>';
+            }
+        }
+
         JHtml::_('jquery.framework');
         JText::script('PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_REGISTER_TRANSACTION_QUESTION');
 
@@ -85,6 +98,32 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         return $html;
     }
 
+    protected function prepareBeneficiary($itemId)
+    {
+        if (strcmp('project_owner', $this->params->get('payment_receiver', 'site_owner')) === 0) {
+            if (JComponentHelper::isEnabled('com_crowdfundingfinance')) {
+                if ($this->payout === null) {
+                    $this->payout = new Crowdfundingfinance\Payout(JFactory::getDbo());
+                    $this->payout->load(['project_id' => $itemId], ['secret_key' => $this->app->get('secret')]);
+                }
+
+                if (!$this->payout->getIban()) {
+                    $this->log->add(JText::_($this->textPrefix . '_ERROR_CROWDFUNDING_FINANCE'), $this->errorType);
+                    return '';
+                }
+
+                $this->iban        = trim((string)$this->payout->getIban());
+                $this->bankAccount = (string)$this->payout->getBankAccount();
+            } else {
+                $this->log->add(JText::_($this->textPrefix . '_ERROR_CROWDFUNDING_FINANCE'), $this->errorType);
+                return '';
+            }
+        } else {
+            $this->iban        = trim((string)$this->params->get('iban', ''));
+            $this->bankAccount = (string)$this->params->get('beneficiary');
+        }
+    }
+
     /**
      * This method performs the transaction.
      *
@@ -96,7 +135,7 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
      * @throws \RuntimeException
      * @throws \OutOfBoundsException
      *
-     * @return null|stdClass
+     * @return null|PaymentResult
      */
     public function onPaymentNotify($context, $params)
     {
@@ -118,14 +157,7 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         }
 
         // Prepare the object that will be returned by this method.
-        $paymentResult = new stdClass;
-        $paymentResult->project         = null;
-        $paymentResult->reward          = null;
-        $paymentResult->transaction     = null;
-        $paymentResult->paymentSession  = null;
-        $paymentResult->serviceProvider = $this->serviceProvider;
-        $paymentResult->serviceAlias    = $this->serviceAlias;
-        $paymentResult->redirectUrl     = '';
+        $paymentResult = new PaymentResult;
 
         $projectId = $this->app->input->getInt('pid');
         $amount    = $this->app->input->getFloat('amount');
@@ -225,14 +257,15 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         }
 
         // Store transaction data
-        $transaction = new Crowdfunding\Transaction\Transaction(JFactory::getDbo());
+        $transaction = new Transaction(JFactory::getDbo());
         $transaction->bind($transactionData);
 
         // Start database transaction.
         $db = JFactory::getDbo();
-        $db->transactionStart();
 
         try {
+            $db->transactionStart();
+
             $options = array(
                 'old_status' => null,
                 'new_status' => $transactionData['txn_status']
@@ -241,15 +274,14 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
             $transactionManager = new TransactionManager(JFactory::getDbo());
             $transactionManager->setTransaction($transaction);
             $transactionManager->process('com_crowdfunding.payment', $options);
+
+            $db->transactionCommit();
         } catch (Exception $e) {
             $db->transactionRollback();
 
             $this->log->add(JText::_($this->textPrefix . '_ERROR_TRANSACTION_PROCESS'), $this->errorType, $e->getMessage());
             return null;
         }
-
-        // Commit database transaction.
-        $db->transactionCommit();
 
         // Generate object of data, based on the transaction properties.
         $paymentResult->transaction = $transaction;
@@ -271,5 +303,60 @@ class plgCrowdfundingPaymentBankTransfer extends Crowdfunding\Payment\Plugin
         $this->removeIntention($paymentSessionRemote, $transaction);
 
         return $paymentResult;
+    }
+
+    /**
+     * This method is executed after complete payment notification.
+     * It is used to be sent mails to users and the administrator.
+     *
+     * <code>
+     * $paymentResult->transaction;
+     * $paymentResult->project;
+     * $paymentResult->reward;
+     * $paymentResult->paymentSession;
+     * $paymentResult->serviceProvider;
+     * $paymentResult->serviceAlias;
+     * $paymentResult->response;
+     * $paymentResult->returnUrl;
+     * $paymentResult->message;
+     * $paymentResult->triggerEvents;
+     * $paymentResult->paymentData;
+     * </code>
+     *
+     * @param string $context
+     * @param PaymentResult $paymentResult  Object that contains Transaction, Reward, Project, PaymentSession, etc.
+     * @param Registry $params Component parameters
+     *
+     * @throws \InvalidArgumentException
+     * @throws \RuntimeException
+     * @throws \OutOfBoundsException
+     */
+    public function onAfterPaymentNotify($context, $paymentResult, $params)
+    {
+        if (!preg_match('/com_crowdfunding\.(notify|payments)\.'.$this->serviceAlias.'/', $context)) {
+            return;
+        }
+
+        if ($this->app->isAdmin()) {
+            return;
+        }
+
+        // Check document type
+        $docType = \JFactory::getDocument()->getType();
+        if (!in_array($docType, array('raw', 'html'), true)) {
+            return;
+        }
+
+        // Prepare payment data - IBAN and BankAccount.
+        $project = $paymentResult->project;
+        $this->prepareBeneficiary($project->getId());
+
+        $paymentResult->paymentData['banktransfer'] = [
+            'iban' => $this->iban,
+            'bank_account' => $this->bankAccount
+        ];
+
+        // Send mails
+        $this->sendMails($paymentResult, $params);
     }
 }

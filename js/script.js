@@ -1,7 +1,10 @@
 jQuery(document).ready(function() {
 	"use strict";
 
-	jQuery("#js-register-bt").on("click", function(event){
+	var $regTxnBtn = jQuery("#js-register-bt");
+	var $spinner   = jQuery("#js-banktransfer-ajax-loading");
+
+    $regTxnBtn.on("click", function(event){
 
         if (confirm(Joomla.JText._("PLG_CROWDFUNDINGPAYMENT_BANKTRANSFER_REGISTER_TRANSACTION_QUESTION"))) {
 
@@ -18,19 +21,21 @@ jQuery(document).ready(function() {
                 dataType: "text json",
                 cache: false,
                 beforeSend: function () {
-                    jQuery("#js-banktransfer-ajax-loading").show();
-                    jQuery("#js-register-bt").prop('disabled', true);
+                    $spinner.show();
+                    $regTxnBtn.prop('disabled', true);
                 },
                 success: function (response) {
 
                     // Hide ajax loading image
-                    jQuery("#js-banktransfer-ajax-loading").hide();
+                    $spinner.hide();
 
                     // Hide the button
-                    jQuery("#js-register-bt").hide();
+                    $regTxnBtn.hide();
 
                     // Set the information about transaction and show it.
-                    jQuery("#js-bt-alert").html(response.text).show();
+                    if (response.text) {
+                        jQuery("#js-bt-alert").html(response.text).show();
+                    }
 
                     // Display the button that points to next step
                     if (response.success) {
@@ -40,12 +45,8 @@ jQuery(document).ready(function() {
                             setTimeout("location.href = '" + response.redirect_url + "'", 1500);
                         }
                     }
-
                 }
-
             });
         }
-
 	});
-
 });
