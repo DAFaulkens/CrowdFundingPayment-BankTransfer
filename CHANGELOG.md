@@ -1,6 +1,9 @@
 CrowdfundingPayment - Bank Transfer Changelog
 =============================================
 
+###v2.6
+* It was made compatible with Prism Library v1.21.
+
 ###v2.5
 * Added an option for select money receiver - project owner or site owner.
 * Change Beneficiary filed type from 'editor' to 'text'.
